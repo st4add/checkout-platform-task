@@ -131,7 +131,7 @@ To securely store out state we will utlise AWS S3 for our deployment with dynamo
 
 1. AWS S3 creation: 
 
-```json
+```bash
 aws s3api create-bucket \
   --bucket <bucketname> \
   --region eu-west-2 \
@@ -154,7 +154,7 @@ aws s3api put-bucket-encryption \
 
 1. DynamoDB Table: 
 
-```json
+```bash
 
 aws dynamodb create-table \
   --table-name terraform-state-lock \
@@ -184,13 +184,22 @@ Now that we have run through our pre-requisites we are ready to deploy our appli
 4. Create a new pull request to merge your new branch to main. 
 5.  Once the tests have passed as outlined in the CI/CD flow section you can merge your branch to main and your serverless application will be deployed to AWS.
 
+### Clean-up Instructions
+
+A terraform destroy GitHub action has been included in the repository for ease of removing the stack.
+
+1. Navigate to Github Actions and select the Terraform Destroy Action.
+2. Next select Run Workflow and type in DESTROY to confirm you want to destroy the stack.
+3. The action will run and you application will be destroyed. 
+4. Navigate to the AWS console and destroy the infrastructure you created as part of the pre-requisites if you don't plan on using them again.
+
 # Local Development
 
-If you require to deploy this application from a local machine you can follow the steps below:
+If you need to deploy this application from a local machine you can follow the steps below:
 
 1. Ensure you clone the code to a directory locally. 
-2. Since we used OIDC in GitHub we will need to run the following command: `*aws configure*` and configure your AWS Access Keys against it. You must ensure that the keys of the user or service account you use have the necessary permissions you need to deploy the stack and follow the principle of least privilege.
-3. Once you have configured your aws access you can cd into the infra directory, here you can run your terraform commands like init, validate, fmt, plan and apply. Since are using a remote backend we don’t need any further configuration.
+2. Since we used OIDC in GitHub we will need to run the following command: `aws configure` and configure your AWS Access Keys against it. You must ensure that the keys of the user or service account you use have the necessary permissions you need to deploy the stack and follow the principle of least privilege.
+3. Once you have configured your aws access you can cd into the infra directory, here you can run your terraform commands like init, validate, fmt, plan and apply. Since we are using a remote backend we don’t need any further configuration.
 4. Any state operations you need to take can be carried out locally as well.
 5. To test our lambda function prior to deploying you can also follow the steps below: 
 6. Run the code below to cd to the lambda function and create a python venv: 

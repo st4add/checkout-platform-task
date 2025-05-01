@@ -4,7 +4,8 @@
 
 This repository holds the Terraform code required to deploy a simple Lambda Function that returns the current time as well as a random fact about cloud computing.
 
-This deployment utilises AWS Lambda, AWS API Gateway, IAM, CloudWatch and S3.
+This deployment utilises AWS Lambda, AWS API Gateway, IAM, CloudWatch and S3. 
+Terraform is configured to use a remote backend in AWS S3 with DynamoDB for state locking. The GitHub Actions are confiugured to use OIDC to authenticate with AWS. Both of these pre-requisites have guided steps on how to set up further down in the readme.
 
 ## Architecture
 
@@ -176,7 +177,11 @@ There are two Github Action Secrets that our Github Action rely on to deploy to 
 
 # Deployment Instructions
 
-Now that we have run through our pre-requisites we are ready to deploy our application. The application configured in this repository has been created to return the current time as well as a random fact about cloud computing. 
+Now that we have run through our pre-requisites we are ready to deploy our application. The application configured in this repository has been created to return the current time as well as a random fact about cloud computing.
+
+Please note that the GitHub Action has disabled the terraform apply job by default. You will need to remove this when you wish to apply your terraform infrastructure.
+1. On line 108 of the tfdeploy.yml remove "false" and uncomment the preceeding line.
+2. This will mean any subsequent pushes to main will result in terraform apply being triggered.
 
 1. Create and checkout to a new branch.
 2. Configure the values in the infra/main.tf file as desired.

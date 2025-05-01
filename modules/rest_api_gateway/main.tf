@@ -1,8 +1,14 @@
+######################
+#     API Gateway    #
+######################
+
 resource "aws_api_gateway_rest_api" "checkout_rest_api" {
-  name        = "checkout-rest_api"
+  name        = var.gateway_name
   description = "API Gateway for checkout Lambda function"
+  tags        = var.tags
 }
 
+# Gateway Method mapped to the root id
 resource "aws_api_gateway_method" "root_get" {
   rest_api_id      = aws_api_gateway_rest_api.checkout_rest_api.id
   resource_id      = aws_api_gateway_rest_api.checkout_rest_api.root_resource_id
@@ -11,7 +17,7 @@ resource "aws_api_gateway_method" "root_get" {
   api_key_required = true
 }
 
-
+# Integration with the lambda function
 resource "aws_api_gateway_integration" "lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.checkout_rest_api.id
   resource_id             = aws_api_gateway_rest_api.checkout_rest_api.root_resource_id
@@ -22,7 +28,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 
 }
 
-
+# Deployment for the API Gateway, will create a new one if methods or integration values change
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on  = [aws_api_gateway_integration.lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.checkout_rest_api.id
@@ -34,6 +40,7 @@ resource "aws_api_gateway_deployment" "deployment" {
   }
 }
 
+# API Gateway stage to isolate our gateway and allow us to create usage plans against it.
 resource "aws_api_gateway_stage" "test_stage" {
   deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.checkout_rest_api.id
@@ -68,14 +75,14 @@ resource "aws_api_gateway_stage" "test_stage" {
   depends_on = [aws_api_gateway_account.checkout_api_account]
 }
 
-# Create an API Gateway API key
+# API Key for secure access to out API
 resource "aws_api_gateway_api_key" "api_key" {
   name        = "checkout_key"
   description = "API key for my checkout_rest API"
   enabled     = true
 }
 
-# Create a Usage Plan
+# Usage plan to limit impact of malicious attacks
 resource "aws_api_gateway_usage_plan" "usage_plan" {
   name = "MyUsagePlan"
 
@@ -118,6 +125,9 @@ resource "aws_api_gateway_method_settings" "method_settings" {
   }
 }
 
+######################
+#     CloudWatch     #
+######################
 resource "aws_cloudwatch_log_group" "api_gateway_log_group" {
   name = "/aws/gateway/${var.gateway_name}/${var.stage_name}"
   retention_in_days = var.log_group_retention
@@ -125,6 +135,7 @@ resource "aws_cloudwatch_log_group" "api_gateway_log_group" {
   tags = var.tags
 }
 
+# Attaching cloudwatch role to API Gateway Settings
 resource "aws_api_gateway_account" "checkout_api_account" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
 }

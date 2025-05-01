@@ -3,8 +3,10 @@
 # Overview
 
 This repository holds the Terraform code required to deploy a simple Lambda Function that returns the current time as well as a random fact about cloud computing.
-
-This deployment utilises AWS Lambda, AWS API Gateway, IAM, CloudWatch and S3. 
+Two modules have been created in this repository to abstract complexity away from the main terraform code. The lambda function provisions an S3 bucket to store your function code, deploys a versioned AWS Lambda function (with log retention settings), and grants API Gateway permission to invoke it.
+The rest api gateway module provisions a REST API in API Gateway with a GET method backed by your Lambda (via AWS_PROXY), enforces API-key access and throttling through a usage plan, deploys it to a named stage with structured CloudWatch logs, and sets up the necessary IAM roles and log groups for API Gateway to publish those logs.
+Our main terraform code calls these modules as well as creates two cloudwatch alarms to alert on 5xx errors on both the lambda function and api gateway.
+ 
 Terraform is configured to use a remote backend in AWS S3 with DynamoDB for state locking. The GitHub Actions are confiugured to use OIDC to authenticate with AWS. Both of these pre-requisites have guided steps on how to set up further down in the readme.
 
 ## Architecture
@@ -180,14 +182,19 @@ There are two Github Action Secrets that our Github Action rely on to deploy to 
 Now that we have run through our pre-requisites we are ready to deploy our application. The application configured in this repository has been created to return the current time as well as a random fact about cloud computing.
 
 Please note that the GitHub Action has disabled the terraform apply job by default. You will need to remove this when you wish to apply your terraform infrastructure.
-1. On line 108 of the tfdeploy.yml remove "false" and uncomment the preceeding line.
-2. This will mean any subsequent pushes to main will result in terraform apply being triggered.
+It is advised to implement branch protection on the main branch ensuring that directs pushes cannot occur as well as pull request requiring at least one reviewer.
+1. On line 108 of the tfdeploy.yml remove "false" and uncomment the proceeding line.
+2. This will mean any subsequent merges to main will result in terraform apply being triggered.
+
+Only changes to the infra/* files will trigger the GitHub Actions to ensure only intended changes are pushed to AWS. Instructions on how to deploy are below:
 
 1. Create and checkout to a new branch.
 2. Configure the values in the infra/main.tf file as desired.
-3. Push the branch back up to GitHub. 
+3. Push the branch up to GitHub. 
 4. Create a new pull request to merge your new branch to main. 
-5.  Once the tests have passed as outlined in the CI/CD flow section you can merge your branch to main and your serverless application will be deployed to AWS.
+5. Once the tests have passed as outlined in the CI/CD flow section you can merge your branch to main and your serverless application will be deployed to AWS.
+6. To test you can run the following command: ```bash curl -H "x-api-key:<your api key>" <invoke api url> ```
+7. You can find both paramaters you need in the api gateway service in the console. Your invoke url can be found under the Stage subheading of your gateway while api keys are listed on the main api gateway page.
 
 ### Clean-up Instructions
 
@@ -233,7 +240,7 @@ PYTHONPATH=../src/my_lambda pytest test_lambda.py
 
 ### Modularised Terraform Code
 
-Creating seperate modules for the API Gateway and Lambda functions abstracts much of the complications away from our main terraform file and allows the user to focus on the variables they need to supply to deploy the application rather than the intricacies of the resource dependencies.
+Creating separate modules for the API Gateway and Lambda functions abstracts much of the complications away from our main terraform file and allows the user to focus on the variables they need to supply to deploy the application rather than the intricacies of the resource dependencies.
 
 ### AWS Authentication and State Management
 
@@ -245,13 +252,15 @@ OIDC has been used for authentication with AWS ensuring we are not using long li
 
 ### GitHub Actions & CI/CD
 
-Once a pull request is crated GitHub Actions will kick off a number of steps as outlined in the CI/CD flow section. The terraform plan can be reviewed in the GitHub actions run and once reviewed only a merge of the branch to the main branch will trigger an apply. 
+Once a pull request is created GitHub Actions will kick off a number of steps as outlined in the CI/CD flow section. The terraform plan can be reviewed in the GitHub actions run and once reviewed only a merge of the branch to the main branch will trigger an apply. 
 
-A seperate GitHub action to destroy the infrastructure also exists. Before manually running this step the user will need to type in DESTROY as a safe guard against deleting the infrastructure accidentally.
+A separate GitHub action to destroy the infrastructure also exists. Before manually running this step the user will need to type in DESTROY as a safe guard against deleting the infrastructure accidentally.
 
-Lambda Unit tests have been created to ensure the validity of the response from the lambda function, if this does not occur we will see an error during our pull request phase meaning we can fix the issue. 
+Lambda Unit tests have been created to ensure the validity of the response from the lambda function, if this does not occur we will see an error during our pull request phase meaning we can fix the issue.
 
-The GiHub actions will also only trigger on changes to the infra/* files meaning we can ensure only intended changes are released. 
+For production scenarios it is recommended to use a separate test environment to test your function ahead of deploying it to a production environment  
+
+The GitHub actions will also only trigger on changes to the infra/* files meaning we can ensure only intended changes are released. 
 
 ### API Gateway
 
@@ -264,3 +273,10 @@ A usage plan has also been set up against the API Gateway with throttling and ra
 For the lambda function I have chosen to use a source file rather than a docker image for simplicity as there are no requirements where we may need to run the function in other environments. Lambda functions using docker images are also more prone to cold start delays and add an additional requirement of an artifact store like AWS ECR.
 
 I have also utilised the AWS Lambda module for simplicity of deployment, by setting the publish value to true we can ensure proper versioning of the lambda function each time we push a change.
+
+If increased performance is required the lambda function can be set to included provisioned concurrency decreasing latency in the response after invoking the function.
+
+### Security
+Through OIDC and service roles only granting access to the services they need to it adheres to the principle of least privilege.
+
+The usage plan and API Key requirement also secures our api gateway and mitigates the risk of exploits and unwanted AWS Costs.

@@ -8,7 +8,7 @@ terraform {
   backend "s3" {
     bucket         = ""
     key            = ""
-    region         = "eu-west-2"
+    region         = ""
     dynamodb_table = ""
     encrypt        = "true"
   }

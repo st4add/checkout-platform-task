@@ -45,7 +45,7 @@ resource "aws_api_gateway_stage" "test_stage" {
   deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.checkout_rest_api.id
   stage_name    = var.stage_name
-  access_log_settings  {
+  access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_log_group.arn
     format = jsonencode({
       context = {
@@ -114,12 +114,12 @@ resource "aws_api_gateway_method_settings" "method_settings" {
   rest_api_id = aws_api_gateway_rest_api.checkout_rest_api.id
   stage_name  = aws_api_gateway_stage.test_stage.stage_name
 
-  method_path = "*/*"  # This is the correct wildcard to override all methods and resources
+  method_path = "*/*" # This is the correct wildcard to override all methods and resources
 
   settings {
-    metrics_enabled = false
-    logging_level   = "ERROR"
-    data_trace_enabled = false
+    metrics_enabled        = false
+    logging_level          = "ERROR"
+    data_trace_enabled     = false
     throttling_burst_limit = 100
     throttling_rate_limit  = 50
   }
@@ -129,10 +129,9 @@ resource "aws_api_gateway_method_settings" "method_settings" {
 #     CloudWatch     #
 ######################
 resource "aws_cloudwatch_log_group" "api_gateway_log_group" {
-  name = "/aws/gateway/${var.gateway_name}/${var.stage_name}"
+  name              = "/aws/gateway/${var.gateway_name}/${var.stage_name}"
   retention_in_days = var.log_group_retention
-
-  tags = var.tags
+  tags              = var.tags
 }
 
 # Attaching cloudwatch role to API Gateway Settings

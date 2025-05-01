@@ -15,7 +15,7 @@ FACTS = [
 ]
 
 def lambda_handler(event, context):
-    # Log the incoming event (helpful for debugging)
+    # Log the incoming event
     logger.info("Received event: %s", event)
 
     # Current time in Europe/London timezone, no fractions

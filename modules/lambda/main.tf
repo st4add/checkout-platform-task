@@ -9,7 +9,6 @@ resource "random_pet" "bucket_name" {
 
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "${var.function_name}-${lower(random_pet.bucket_name.id)}"
-
   tags   = var.tags
 
 }
@@ -25,21 +24,18 @@ resource "aws_s3_bucket_versioning" "versioning" {
 ######################
 
 module "lambda_function" {
-  source = "terraform-aws-modules/lambda/aws"
-
-  function_name = var.function_name
-  description   = var.description
-  handler       = var.handler
-  source_path   = var.file_path
-  runtime       = var.runtime
-  publish       = true
+  source                            = "terraform-aws-modules/lambda/aws"
+  function_name                     = var.function_name
+  description                       = var.description
+  handler                           = var.handler
+  source_path                       = var.file_path
+  runtime                           = var.runtime
+  publish                           = true
   use_existing_cloudwatch_log_group = false
   cloudwatch_logs_retention_in_days = var.log_group_retention
-
-  store_on_s3 = true
-  s3_bucket   = aws_s3_bucket.lambda_bucket.id
-
-  tags = var.tags
+  store_on_s3                       = true
+  s3_bucket                         = aws_s3_bucket.lambda_bucket.id
+  tags                              = var.tags
 }
 
 # Allows API Gateway to invoke the lambda function

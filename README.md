@@ -202,7 +202,7 @@ A terraform destroy GitHub action has been included in the repository for ease o
 
 1. Navigate to Github Actions and select the Terraform Destroy Action.
 2. Next select Run Workflow and type in DESTROY to confirm you want to destroy the stack.
-3. The action will run and you application will be destroyed. 
+3. The action will run and your application will be destroyed. 
 4. Navigate to the AWS console and destroy the infrastructure you created as part of the pre-requisites if you don't plan on using them again.
 
 # Local Development

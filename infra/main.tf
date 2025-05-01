@@ -3,11 +3,11 @@
 ######################
 
 locals {
-  project     = "checkout-task"
-  environment = "test"
+  project     = ""
+  environment = ""
   default_tags = {
     Project   = local.project
-    Owner     = "David Stead"
+    Owner     = ""
     ManagedBy = "Terraform"
   }
 
@@ -60,9 +60,9 @@ resource "aws_cloudwatch_metric_alarm" "api_5xx" {
   evaluation_periods  = 1
   metric_name         = "5XXError"
   namespace           = "AWS/ApiGateway"
-  period              = 300 # 5 minutes
+  period              = 300
   statistic           = "Sum"
-  threshold           = 1 # any 5xx in the period
+  threshold           = 1
   dimensions = {
     ApiName = module.checkout_rest_api_gateway.gateway_name
     Stage   = module.checkout_rest_api_gateway.stage_name
@@ -76,9 +76,9 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   evaluation_periods  = 1
   metric_name         = "Errors"
   namespace           = "AWS/Lambda"
-  period              = 300 # evaluate every 1 minute
+  period              = 300 
   statistic           = "Sum"
-  threshold           = 1 # any error in the period triggers it
+  threshold           = 1 
   dimensions = {
     FunctionName = module.checkout_lambda.lambda_function_name
   }

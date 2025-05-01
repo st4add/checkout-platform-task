@@ -3,7 +3,9 @@
 # Overview
 
 This repository holds the Terraform code required to deploy a simple Lambda Function that returns the current time as well as a random fact about cloud computing.
+
 Two modules have been created in this repository to abstract complexity away from the main terraform code. The lambda function provisions an S3 bucket to store your function code, deploys a versioned AWS Lambda function (with log retention settings), and grants API Gateway permission to invoke it.
+
 The rest api gateway module provisions a REST API in API Gateway with a GET method backed by your Lambda (via AWS_PROXY), enforces API-key access and throttling through a usage plan, deploys it to a named stage with structured CloudWatch logs, and sets up the necessary IAM roles and log groups for API Gateway to publish those logs.
 Our main terraform code calls these modules as well as creates two cloudwatch alarms to alert on 5xx errors on both the lambda function and api gateway.
  
